@@ -1,1 +1,1 @@
-# comp_ufabc
+#include <stdio.h>
