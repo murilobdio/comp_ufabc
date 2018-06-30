@@ -46,7 +46,14 @@ int line = 0;
 int col = 1;
 char lastChar;
 
-Token createToken (char text[], int type) {
+Token createToken (char text, int type) {
+	Token t;
+	t.tokenType = type;
+	strcpy(t.tokenText, &text);
+	return t;
+}
+
+Token createTextToken (char text[], int type) {
 	Token t;
 	t.tokenType = type;
 	strcpy(t.tokenText, text);
@@ -69,10 +76,14 @@ Token identify(char currentChar, FILE * arq, int state) {
 				case '}': state=C_KEY; return createToken(currentChar, C_KEY);
 				case ',': state=COMMA; return createToken(currentChar, COMMA);
 				case ';': state=SEMICOLON; return createToken(currentChar, SEMICOLON);
-				case '>': case '<': return identify(nextChar(arq), arq, OP_GT_LT);
-				case '=': return identify(nextChar(arq), arq, OP_ATTR);
-				case '!': return identify(nextChar(arq), arq, OP_NOT);
-				case EOF: return createToken("EOF", T_EOF);
+				case '>': case '<': return identify(nextChar(currentChar, arq), arq, OP_GT_LT);
+				case '=': return identify(nextChar(currentChar, arq), arq, OP_ATTR);
+				case '!': return identify(nextChar(currentChar, arq), arq, OP_NOT);
+				case EOF: ;
+          Token t;
+          t.tokenType = T_EOF;
+          strcpy(t.tokenText, "EOF");
+          return t;
 				default:
 				 // outros identificadores
 				 // erro
@@ -84,25 +95,25 @@ Token identify(char currentChar, FILE * arq, int state) {
 				char token_text[2];
 				token_text[0] = lastChar;
 				token_text[1] = currentChar;
-				return createToken(token_text, OP_GE_LE);
+				return createTextToken(token_text, OP_GE_LE);
 			}
-			return createToken(lastChar(), OP_GT_LT);		
+			return createToken(lastChar, OP_GT_LT);		
 		case OP_ATTR:
 			if (currentChar == '=') {
 				char token_text[2];
 				token_text[0] = lastChar;
 				token_text[1] = currentChar;
-				return createToken(token_text, OP_COMP);
+				return createTextToken(token_text, OP_COMP);
 			}
-			return createToken(lastChar(), OP_ATTR);		
+			return createToken(lastChar, OP_ATTR);		
 		case OP_NOT:
 			if (currentChar == '=') {
 				char token_text[2];
 				token_text[0] = lastChar;
 				token_text[1] = currentChar;
-				return createToken(token_text, OP_DIFF);
+				return createTextToken(token_text, OP_DIFF);
 			}
-			return createToken(lastChar(), OP_NOT);
+			return createToken(lastChar, OP_NOT);
 
 	}
 }
