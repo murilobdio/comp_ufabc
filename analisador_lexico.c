@@ -15,18 +15,18 @@ enum lex {
  OP_GE_LE = 38,
  OP_GT_LT = 33,
  OP_ATTR = 19,
- OP_COMP = 38,
- OP_DIFF = 38,
+ OP_COMP = 50,
+ OP_DIFF = 51,
  ID = 17,
  OP_MINUS = 2,
  OP_DECR = 40,
  OP_PLUS = 14,
  OP_INCR = 40,
- OP_MULT = 36,
- OP_MOD = 36,
+ OP_MULT = 52,
+ OP_MOD = 53,
  OP_DIV = 36,
  OP_NOT = 41,
- OP_OR = 36,
+ OP_OR = 54,
  OP_AND = 36,
  COMMENT_LINE = 11,
  COMMENT_BLOCK = 22,
@@ -40,22 +40,31 @@ enum lex {
 typedef struct TokenStruct {
 	char tokenText[200];
 	int tokenType;
+  char tokenTypeText[40];
+  int tokenLine;
+  int tokenCol;
 } Token;
 
 int line = 0;
 int col = 1;
 char lastChar;
 
-Token createToken (char text, int type) {
+Token createToken (char text, int type, char typeText[]) {
 	Token t;
 	t.tokenType = type;
+  t.tokenLine = line;
+  t.tokenCol = col;
 	strcpy(t.tokenText, &text);
+  strcpy(t.tokenTypeText, typeText);
 	return t;
 }
 
-Token createTextToken (char text[], int type) {
+Token createTextToken (char text[], int type, char typeText[]) {
 	Token t;
 	t.tokenType = type;
+  t.tokenCol = col;
+  t.tokenLine = line;
+  strcpy(t.tokenTypeText, typeText);
 	strcpy(t.tokenText, text);
 	return t;
 }
@@ -70,12 +79,12 @@ Token identify(char currentChar, FILE * arq, int state) {
 	switch(state) {
 		case BEGIN:
 			switch(currentChar) {
-				case '(': state=O_PAR; return createToken(currentChar, O_PAR);
-				case ')': state=C_PAR; return createToken(currentChar, C_PAR);
-				case '{': state=O_KEY; return createToken(currentChar, O_KEY);
-				case '}': state=C_KEY; return createToken(currentChar, C_KEY);
-				case ',': state=COMMA; return createToken(currentChar, COMMA);
-				case ';': state=SEMICOLON; return createToken(currentChar, SEMICOLON);
+        case '(': state=O_PAR; return createToken(currentChar, O_PAR, "O_PAR");
+        case ')': state=C_PAR; return createToken(currentChar, C_PAR, "C_PAR");
+        case '{': state=O_KEY; return createToken(currentChar, O_KEY, "O_KEY");
+        case '}': state=C_KEY; return createToken(currentChar, C_KEY, "C_KEY");
+        case ',': state=COMMA; return createToken(currentChar, COMMA, "COMMA");
+        case ';': state=SEMICOLON; return createToken(currentChar, SEMICOLON, "SEMICOLON");
 				case '>': case '<': return identify(nextChar(currentChar, arq), arq, OP_GT_LT);
 				case '=': return identify(nextChar(currentChar, arq), arq, OP_ATTR);
 				case '!': return identify(nextChar(currentChar, arq), arq, OP_NOT);
@@ -95,25 +104,25 @@ Token identify(char currentChar, FILE * arq, int state) {
 				char token_text[2];
 				token_text[0] = lastChar;
 				token_text[1] = currentChar;
-				return createTextToken(token_text, OP_GE_LE);
+        return createTextToken(token_text, OP_GE_LE, "OP_GE_LE");
 			}
-			return createToken(lastChar, OP_GT_LT);		
+      return createToken(lastChar, OP_GT_LT, "OP_GT_LT");
 		case OP_ATTR:
 			if (currentChar == '=') {
 				char token_text[2];
 				token_text[0] = lastChar;
 				token_text[1] = currentChar;
-				return createTextToken(token_text, OP_COMP);
+        return createTextToken(token_text, OP_COMP, "OP_COMP");
 			}
-			return createToken(lastChar, OP_ATTR);		
+      return createToken(lastChar, OP_ATTR, "OP_ATTR");
 		case OP_NOT:
 			if (currentChar == '=') {
 				char token_text[2];
 				token_text[0] = lastChar;
 				token_text[1] = currentChar;
-				return createTextToken(token_text, OP_DIFF);
+        return createTextToken(token_text, OP_DIFF, "OP_DIFF");
 			}
-			return createToken(lastChar, OP_NOT);
+      return createToken(lastChar, OP_NOT, "OP_NOT");
 
 	}
 }
